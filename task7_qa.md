@@ -4,7 +4,7 @@
 скріншот реалізованої сторінки Menu (гість зайшов за посиланням `/join/{token}`).
 
 Тест-кейси й дефект-репорти оформлені за шаблоном у Google-таблиці (вкладки *Test cases* і *Defect reports*):
-https://docs.google.com/spreadsheets/d/19qwpg9lrY0749VhcZKd4ZdZuXNTq-Qco5ks7ayq8r4A/edit
+https://docs.google.com/spreadsheets/d/1r6qOlsd7TrJNGREEbMK78q9DnWW3Q9LjUGHU9buSfsM/edit?usp=sharing
 Нижче той самий вміст для зручності.
 
 ---
