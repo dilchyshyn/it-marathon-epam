@@ -5,12 +5,14 @@ using APIHandler.Constants.Orders;
 using APIHandler.Entities;
 using APIHandler.Exceptions;
 using APIHandler.Mappers;
+using APIHandler.Models.GroupReservation;
 using APIHandler.Models.GuestSessions;
 using APIHandler.Models.Orders;
 using APIHandler.Repositories.Auth;
 using APIHandler.Repositories.Dishes;
 using APIHandler.Repositories.GroupReservations;
 using APIHandler.Repositories.GuestSessions;
+using APIHandler.Repositories.Orders;
 using APIHandler.Repositories.Reservations;
 using APIHandler.Repositories.Tables;
 using System;
@@ -29,7 +31,8 @@ public class GuestSessionService(
     IDishRepository dishRepository,
     IReservationRepository reservationRepository,
     IUserRepository userRepository,
-    ITableRepository tableRepository) : IGuestSessionService
+    ITableRepository tableRepository,
+    IOrderRepository orderRepository) : IGuestSessionService
 {
     public async Task<bool> IsAuthorizedAsync(string guestSessionToken, string guestSessionId)
     {
@@ -184,35 +187,166 @@ public class GuestSessionService(
             throw new ValidationException("Guest session does not belong to this group reservation.");
         }
 
+        if (session.IsOwnerSession)
+        {
+            throw new ValidationException("Owner session cannot be removed.");
+        }
+
         await guestSessionRepository.DeleteAsync(session);
 
+        return await BuildGroupSnapshotAsync(groupReservationId);
+    }
+
+    public async Task<GetAllSessionsResponse> GetGroupSessionsAsync(string userId, string groupReservationId)
+    {
+        await ValidateReservationOwnerAsync(groupReservationId, userId);
+
+        return await BuildGroupSnapshotAsync(groupReservationId);
+    }
+
+    public async Task<OwnerSessionResponse> GetOwnerSessionIdAsync(string userId, string reservationId)
+    {
+        var reservation = await reservationRepository.GetReservationByIdAsync(reservationId)
+            ?? throw new ReservationNotFoundException($"Reservation {reservationId} was not found.");
+
+        if (reservation.CustomerId != userId)
+        {
+            throw new ActionForbiddenException("Only the reservation owner can perform this action.");
+        }
+
+        var group = await groupReservationRepository.GetByReservationIdAsync(reservationId)
+            ?? throw new GroupReservationNotFoundException();
+
+        var sessions = await guestSessionRepository.GetAllByGroupReservationIdAsync(group.GroupReservationId);
+
+        // The owner session is created lazily on the first request.
+        var ownerSession = sessions.FirstOrDefault(s => s.IsOwnerSession)
+            ?? await CreateGroupOwnerSessionAsync(userId, group.GroupReservationId);
+
+        return new OwnerSessionResponse(ownerSession.Id);
+    }
+
+    public async Task<IEnumerable<SubmittedDishResponse>> SubmitGroupPreOrderAsync(string userId, string groupReservationId, string reservationId)
+    {
+        var group = await groupReservationRepository.GetGroupReservationByIdAsync(groupReservationId)
+            ?? throw new GroupReservationNotFoundException();
+
+        var reservation = await reservationRepository.GetReservationByIdAsync(reservationId)
+            ?? throw new ReservationNotFoundException($"Reservation {reservationId} was not found.");
+
+        if (group.ReservationId != reservation.Id)
+        {
+            throw new ValidationException("Group reservation does not belong to this reservation.");
+        }
+
+        if (reservation.CustomerId != userId)
+        {
+            throw new ActionForbiddenException("Only the reservation owner can perform this action.");
+        }
+
+        if (group.Status == GroupReservationStatus.Submitted)
+            throw new GroupReservationSubmittedException();
+
+        if (group.Status == GroupReservationStatus.Closed)
+            throw new GroupReservationExpiredException();
+
+        var sessions = await guestSessionRepository.GetAllByGroupReservationIdAsync(groupReservationId);
+        var submittedSessions = sessions.Where(s => s.IsSubmitted).ToList();
+
+        if (submittedSessions.Count == 0)
+            throw new ValidationException("No submitted guest sessions found to consolidate.");
+
+        var consolidatedDishes = submittedSessions
+            .SelectMany(s => s.Dishes ?? [])
+            .GroupBy(d => d.DishId)
+            .Select(g => new OrderItem
+            {
+                DishId = g.Key,
+                Quantity = g.Sum(d => d.Quantity),
+                State = OrderItemState.Pending
+            })
+            .Where(d => d.Quantity > 0)
+            .ToList();
+
+        if (consolidatedDishes.Count == 0)
+            throw new ValidationException("No dishes selected in the submitted guest sessions.");
+
+        var order = await orderRepository.GetOrderByReservationIdAsync(reservationId)
+            ?? throw new ValidationException($"Active pre-order for reservation '{reservationId}' not found.");
+
+        order.Dishes ??= [];
+
+        foreach (var dish in consolidatedDishes)
+        {
+            var existingDish = order.Dishes.FirstOrDefault(d => d.DishId == dish.DishId);
+
+            if (existingDish != null)
+            {
+                existingDish.Quantity += dish.Quantity;
+            }
+            else
+            {
+                order.Dishes.Add(dish);
+            }
+        }
+
+        order.Status = OrderStatus.SubmittedByCustomer;
+        await orderRepository.SaveOrderAsync(order);
+
+        group.Status = GroupReservationStatus.Submitted;
+        await groupReservationRepository.SaveGroupReservationAsync(group);
+
+        return consolidatedDishes.Select(d => new SubmittedDishResponse(d.DishId, d.Quantity)).ToArray();
+    }
+
+    private async Task<GetAllSessionsResponse> BuildGroupSnapshotAsync(string groupReservationId)
+    {
         var sessions = await guestSessionRepository.GetAllByGroupReservationIdAsync(groupReservationId);
 
         var dishIds = sessions
-            .SelectMany(s => s.Dishes)
+            .SelectMany(s => s.Dishes ?? [])
             .Select(s => s.DishId)
             .Distinct()
             .ToArray();
 
-        var allDishes = await dishRepository.GetDishesByIdsAsync(dishIds);
+        var allDishes = dishIds.Length > 0
+            ? await dishRepository.GetDishesByIdsAsync(dishIds)
+            : [];
         var dishesById = allDishes.ToDictionary(d => d.Id);
 
         var participants = new List<Participant>();
 
-        foreach (var guestSession in sessions)
+        // Owner goes first, guests keep the order in which they were stored.
+        foreach (var guestSession in sessions.OrderByDescending(s => s.IsOwnerSession))
         {
-            var items = guestSession.Dishes.Select(d => new OrderItemResponse
-            {
-                Dish = DishMapper.ToDishResponse(dishesById[d.DishId]),
-                Quantity = d.Quantity
-            }).ToArray();
+            var items = (guestSession.Dishes ?? [])
+                .Where(d => dishesById.ContainsKey(d.DishId))
+                .Select(d => new OrderItemResponse
+                {
+                    Dish = DishMapper.ToDishResponse(dishesById[d.DishId]),
+                    Quantity = d.Quantity
+                }).ToArray();
 
             decimal total = items.Sum(i => i.Quantity * i.Dish.Price);
-            var participant = new Participant(guestSession.Id, ParticipantType.Guest, guestSession.GuestName, items, total, guestSession.IsSubmitted);
-            participants.Add(participant);
+
+            var type = guestSession.IsOwnerSession ? ParticipantType.Owner : ParticipantType.Guest;
+            string name = guestSession.IsOwnerSession
+                ? await GetOwnerNameAsync(guestSession)
+                : guestSession.GuestName;
+
+            participants.Add(new Participant(guestSession.Id, type, name, items, total, guestSession.IsSubmitted));
         }
 
         return new GetAllSessionsResponse(participants, participants.Sum(p => p.Total));
+    }
+
+    private async Task<string> GetOwnerNameAsync(GuestSession ownerSession)
+    {
+        if (string.IsNullOrWhiteSpace(ownerSession.OwnerUserId))
+            return ownerSession.GuestName;
+
+        var user = await userRepository.GetUserByIdAsync(ownerSession.OwnerUserId);
+        return user?.Attributes?.FirstOrDefault(a => a.Name == "given_name")?.Value ?? ownerSession.GuestName;
     }
     public async Task SubmitCartAsync(string guestSessionId)
     {
@@ -240,7 +374,7 @@ public class GuestSessionService(
 
         // Owner is always 1 active participant. 
         // If sessions is null/empty, it safely evaluates to 0 joined guests + 1 owner = 1.
-        return (sessions?.Count ?? 0) + 1;
+        return (sessions?.Count(s => !s.IsOwnerSession) ?? 0) + 1;
     }
 
     private async Task ValidateGroupReservationId(string groupReservationId) => await GetGroupReservationAndValidateAsync(groupReservationId);
@@ -308,7 +442,7 @@ public class GuestSessionService(
         }
     }
 
-    public async Task CreateGroupOwnerSessionAsync(string userId, string groupReservationId)
+    public async Task<GuestSession> CreateGroupOwnerSessionAsync(string userId, string groupReservationId)
     {
         var session = new GuestSession()
         {
@@ -321,6 +455,8 @@ public class GuestSessionService(
         };
 
         await guestSessionRepository.SaveAsync(session);
+
+        return session;
     }
 
     public async Task<GetGuestSessionResponse> GetGuestSessionInfoAsync(string guestSessionId)
