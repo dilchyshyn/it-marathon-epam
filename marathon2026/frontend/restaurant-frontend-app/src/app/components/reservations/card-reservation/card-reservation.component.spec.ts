@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { CardReservationComponent } from './card-reservation.component';
 import { API_BASE_URL } from '@app/shared/config/api-base-url.token';
 import { ReservationCustomer, ReservationStatusCustomer } from '@app/models/reservations/reservation.model';
@@ -35,5 +35,25 @@ describe('CardReservationComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  function groupPreOrderButton(): HTMLButtonElement | undefined {
+    const buttons = [...(fixture.nativeElement as HTMLElement).querySelectorAll('button')];
+    return buttons.find((button) => button.textContent?.trim() === 'Group Pre-Order');
+  }
+
+  it('shows «Group Pre-Order» for a reserved reservation with 2+ guests and opens the owner screen', () => {
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+    groupPreOrderButton()?.click();
+
+    expect(navigate).toHaveBeenCalledWith(['/reservations', 'res-1', 'group-order']);
+  });
+
+  it('hides «Group Pre-Order» for a single-guest reservation', () => {
+    fixture.componentRef.setInput('r', { ...RESERVATION, guestCount: 1 });
+    fixture.detectChanges();
+
+    expect(groupPreOrderButton()).toBeUndefined();
   });
 });

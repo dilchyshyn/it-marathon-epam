@@ -260,3 +260,55 @@ $transition-timing: ease;
     transition: none;
   }
 }
+
+// Halloween accent (group pre-order owner screen): pumpkin instead of green.
+.button--pumpkin {
+  &.button--primary {
+    background-color: color.$halloween-pumpkin-600;
+
+    &::before {
+      background: color.$halloween-pumpkin-gradient;
+    }
+
+    &:active:not(:disabled):not([aria-disabled='true']) {
+      background-color: color.$halloween-purple-600;
+    }
+
+    &:disabled,
+    &[aria-disabled='true'] {
+      background-color: color.$neutral-400;
+    }
+  }
+
+  &.button--secondary {
+    color: color.$halloween-pumpkin-600;
+    border-color: color.$halloween-pumpkin-600;
+
+    &:hover:not(:disabled):not([aria-disabled='true']),
+    &:focus-visible {
+      background-color: color.$halloween-pumpkin-100;
+    }
+  }
+
+  &.button--tertiary:hover:not(:disabled):not([aria-disabled='true']),
+  &.button--tertiary:focus-visible {
+    color: color.$halloween-pumpkin-600;
+    text-decoration-color: color.$halloween-pumpkin-600;
+  }
+}
+
+.button--danger {
+  color: color.$red-400;
+  background-color: color.$neutral-0;
+  border-color: color.$red-400;
+
+  &:hover:not(:disabled):not([aria-disabled='true']),
+  &:focus-visible {
+    background-color: color.$red-30;
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.6;
+  }
+}

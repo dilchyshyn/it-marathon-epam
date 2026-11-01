@@ -1,0 +1,320 @@
+@use 'app/shared/styles/abstracts/colors' as color;
+
+// Layout follows Figma «Owner Flow»; the Halloween theme only swaps the palette
+// (green → pumpkin / purple) and adds decorative bats and a cobweb.
+
+:host {
+  display: block;
+}
+
+.page {
+  position: relative;
+  min-height: 100vh;
+  padding: 40px 16px 64px;
+  overflow: hidden;
+  background: color.$halloween-night-gradient;
+}
+
+// Night sky with moon and bats: app-halloween-backdrop.
+
+.cobweb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 120px;
+  pointer-events: none;
+  background:
+    repeating-radial-gradient(circle at 0 0, transparent 0 18px, rgba(107, 63, 160, 0.18) 18px 19px),
+    repeating-conic-gradient(from 0deg at 0 0, rgba(107, 63, 160, 0.18) 0deg 1deg, transparent 1deg 15deg);
+  border-top-left-radius: 24px;
+  mask-image: radial-gradient(circle at 0 0, #000 60%, transparent 72%);
+}
+
+// ---------- panel (Figma modal card) ----------
+
+.panel {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 760px;
+  padding: 40px;
+  margin: 0 auto;
+  background: color.$neutral-100;
+  border: 1px solid color.$halloween-purple-100;
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(245, 124, 31, 0.15);
+}
+
+.panel-header {
+  position: relative;
+  padding-bottom: 16px;
+  border-bottom: 1px solid color.$halloween-pumpkin-100;
+}
+
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+
+  h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 500;
+    line-height: 40px;
+    color: color.$neutral-900;
+
+    &::after {
+      margin-left: 8px;
+      content: '🎃';
+    }
+  }
+}
+
+.status-badge {
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 20px;
+  color: color.$halloween-purple-600;
+  background: color.$halloween-purple-100;
+  border-radius: 8px;
+
+  &--sent {
+    color: color.$halloween-pumpkin-600;
+    background: color.$halloween-pumpkin-100;
+  }
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding: 0;
+  margin: 12px 0 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    color: color.$neutral-700;
+  }
+}
+
+.icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: color.$halloween-pumpkin-400;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+
+  &--location {
+    mask-image: url('/assets/svg/location.svg');
+  }
+
+  &--calendar {
+    mask-image: url('/assets/svg/calendar.svg');
+  }
+
+  &--clock {
+    mask-image: url('/assets/svg/clock.svg');
+  }
+
+  &--people {
+    mask-image: url('/assets/svg/people.svg');
+  }
+}
+
+// ---------- states ----------
+
+.state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 32px 16px;
+  margin: 0;
+  color: color.$neutral-600;
+  text-align: center;
+
+  p {
+    margin: 0;
+  }
+
+  &--error {
+    color: color.$neutral-700;
+  }
+}
+
+.state-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: color.$neutral-900;
+}
+
+.pumpkin-spinner,
+.empty-cauldron {
+  font-size: 36px;
+}
+
+// ---------- sync row & notice ----------
+
+.sync-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -8px;
+}
+
+.sync-text {
+  margin: 0;
+  font-size: 12px;
+  color: color.$neutral-400;
+
+  &--warning {
+    color: color.$halloween-pumpkin-600;
+  }
+}
+
+.notice {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 0;
+  color: color.$neutral-900;
+  background: color.$orange-30;
+  border: 1px solid color.$orange-100;
+  border-radius: 8px;
+}
+
+.notice-icon {
+  font-size: 18px;
+}
+
+// ---------- participants & consolidated ----------
+
+.participants {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.consolidated {
+  padding: 16px;
+  background: color.$halloween-pumpkin-30;
+  border: 1px dashed color.$halloween-pumpkin-400;
+  border-radius: 16px;
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 28px;
+  }
+}
+
+.consolidated-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid color.$halloween-pumpkin-100;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.muted {
+  margin: 0;
+  color: color.$neutral-400;
+}
+
+// ---------- footer ----------
+
+.panel-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 2px solid color.$halloween-pumpkin-100;
+}
+
+.grand-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 40px;
+}
+
+.grand-total-value {
+  font-size: 32px;
+  color: color.$halloween-pumpkin-600;
+}
+
+.sent-note {
+  padding: 16px;
+  margin: 0;
+  font-weight: 500;
+  color: color.$neutral-0;
+  text-align: center;
+  background: color.$halloween-night-700;
+  border-radius: 8px;
+}
+
+// ---------- dialogs ----------
+
+.dialog-text {
+  margin: 0;
+  line-height: 24px;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+// ---------- phone (375 px) ----------
+
+@media (max-width: 600px) {
+  .page {
+    padding: 16px 8px 40px;
+  }
+
+  .panel {
+    gap: 16px;
+    padding: 24px 16px;
+  }
+
+  .grand-total {
+    font-size: 20px;
+  }
+
+  .grand-total-value {
+    font-size: 26px;
+  }
+}

@@ -149,6 +149,10 @@ export class CardReservationComponent {
     );
   });
 
+  onGroupPreOrder(): void {
+    this.router.navigate(['/reservations', this.r().id, 'group-order']);
+  }
+
   onPreOrder(): void {
     const reservation = this.r();
     const startTime = new Date(reservation.startTime);

@@ -1,0 +1,65 @@
+@use 'app/shared/styles/abstracts/colors' as color;
+
+:host {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.moon {
+  position: absolute;
+  top: 32px;
+  right: 8%;
+  width: 96px;
+  height: 96px;
+  background: radial-gradient(circle at 35% 35%, #fff6d8, #f3d27a 70%);
+  border-radius: 50%;
+  box-shadow: 0 0 60px rgba(243, 210, 122, 0.45);
+}
+
+.bat {
+  position: absolute;
+  width: 48px;
+  height: 20px;
+  background: color.$halloween-purple-400;
+  clip-path: polygon(0 30%, 18% 0, 30% 35%, 42% 15%, 50% 40%, 58% 15%, 70% 35%, 82% 0, 100% 30%, 80% 70%, 62% 60%, 50% 100%, 38% 60%, 20% 70%);
+  animation: flap 1.6s ease-in-out infinite alternate;
+
+  &--one {
+    top: 70px;
+    left: 6%;
+  }
+
+  &--two {
+    top: 150px;
+    right: 18%;
+    transform: scale(0.7);
+    animation-delay: 0.4s;
+  }
+
+  &--three {
+    top: 40%;
+    left: 3%;
+    transform: scale(0.55);
+    animation-delay: 0.8s;
+  }
+}
+
+@keyframes flap {
+  to {
+    translate: 6px -10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bat {
+    animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .moon {
+    width: 56px;
+    height: 56px;
+  }
+}

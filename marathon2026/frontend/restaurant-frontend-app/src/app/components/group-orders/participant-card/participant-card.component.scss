@@ -1,0 +1,164 @@
+@use 'app/shared/styles/abstracts/colors' as color;
+
+:host {
+  display: block;
+}
+
+.card {
+  padding: 16px 16px 8px;
+  background: color.$neutral-0;
+  border: 1px solid color.$neutral-200;
+  border-radius: 16px;
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 28px;
+  color: color.$neutral-900;
+}
+
+.chip {
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 20px;
+  border-radius: 999px;
+
+  &.submitted {
+    color: color.$halloween-purple-600;
+    background: color.$halloween-purple-100;
+  }
+
+  &.pending {
+    color: color.$halloween-pumpkin-600;
+    background: color.$halloween-pumpkin-100;
+  }
+
+  &.submitted::before {
+    content: '✓ ';
+  }
+
+  &.pending::before {
+    content: '⏳ ';
+  }
+}
+
+.remove {
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: color.$neutral-900;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 1px solid color.$neutral-900;
+
+  &:hover,
+  &:focus-visible {
+    color: color.$halloween-pumpkin-600;
+    border-bottom-color: color.$halloween-pumpkin-600;
+  }
+}
+
+.items {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 48px 1fr auto minmax(64px, auto);
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid color.$neutral-100;
+
+  p {
+    margin: 0;
+  }
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: color.$halloween-pumpkin-600;
+  // pumpkin-like circle with a little stem
+  background: radial-gradient(circle at 50% 60%, color.$halloween-pumpkin-100 60%, color.$halloween-pumpkin-30);
+  box-shadow: inset 0 -3px 0 color.$halloween-pumpkin-100;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 500;
+  color: color.$neutral-900;
+  overflow-wrap: anywhere;
+}
+
+.qty {
+  color: color.$neutral-600;
+  white-space: nowrap;
+}
+
+.price {
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.empty {
+  margin: 8px 0;
+  color: color.$neutral-400;
+}
+
+.subtotal {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .item {
+    grid-template-columns: 40px 1fr auto;
+
+    .price {
+      grid-column: 2 / -1;
+      text-align: left;
+    }
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+}

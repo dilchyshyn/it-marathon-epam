@@ -62,3 +62,25 @@ $sage-100: #D6E5D5;
 
 
 
+
+// Halloween theme (group pre-order owner screen)
+$halloween-night-900: #1a1224;
+$halloween-night-700: #2b1d3d;
+$halloween-purple-100: #f1e8fb;
+$halloween-purple-400: #6b3fa0;
+$halloween-purple-600: #4d2a78;
+$halloween-pumpkin-30: #fff8f0;
+$halloween-pumpkin-100: #ffe8d1;
+$halloween-pumpkin-400: #f57c1f;
+$halloween-pumpkin-600: #c95a0a;
+$halloween-pumpkin-gradient: linear-gradient(
+    120deg,
+    #c95a0a,
+    #f57c1f 80%
+);
+$halloween-night-gradient: linear-gradient(
+    180deg,
+    #1a1224,
+    #2b1d3d 60%,
+    #3a2149
+);
