@@ -3,7 +3,8 @@
 Об'єкт тестування: user story **[Draft] US11_Guest Viewing Reservation Menu** (Epic: Order Management),
 скріншот реалізованої сторінки Menu (гість зайшов за посиланням `/join/{token}`).
 
-Тест-кейси й дефект-репорти оформлені за шаблоном у Google-таблиці (вкладки *Test cases* і *Defect reports*).
+Тест-кейси й дефект-репорти оформлені за шаблоном у Google-таблиці (вкладки *Test cases* і *Defect reports*):
+https://docs.google.com/spreadsheets/d/19qwpg9lrY0749VhcZKd4ZdZuXNTq-Qco5ks7ayq8r4A/edit
 Нижче той самий вміст для зручності.
 
 ---
