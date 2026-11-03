@@ -51,6 +51,12 @@ describe('GeneralInformationComponent', () => {
   let readerResults: WeakMap<FileReader, string>;
   let readerStates: WeakMap<FileReader, FileReader['readyState']>;
 
+  const realFileReader = window.FileReader;
+
+  afterEach(() => {
+    window.FileReader = realFileReader;
+  });
+
   beforeEach(async () => {
     auth = {
       user$: new BehaviorSubject<UserModel | null>(user),
@@ -80,30 +86,49 @@ describe('GeneralInformationComponent', () => {
     readerResults = new WeakMap();
     readerStates = new WeakMap();
 
-    // Control callbacks without reading or decoding real files.
-    spyOnProperty(FileReader.prototype, 'result', 'get')
-      .and.callFake(function (this: FileReader) {
-      return readerResults.get(this) ?? null;
-    });
+    // Control callbacks without reading or decoding real files. zone.js wraps the real FileReader so that its
+    // properties cannot be spied on, which is why the whole class is replaced for the test.
+    class ControlledFileReader {
+      static readonly EMPTY = 0;
+      static readonly LOADING = 1;
+      static readonly DONE = 2;
 
-    spyOnProperty(FileReader.prototype, 'readyState', 'get')
-      .and.callFake(function (this: FileReader) {
-      return readerStates.get(this) ?? FileReader.EMPTY;
-    });
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+
+      get result(): string | null {
+        return readerResults.get(this as unknown as FileReader) ?? null;
+      }
+
+      get readyState(): number {
+        return readerStates.get(this as unknown as FileReader) ?? ControlledFileReader.EMPTY;
+      }
+
+      readAsDataURL(): void {
+        return undefined;
+      }
+
+      abort(): void {
+        return undefined;
+      }
+    }
+
+    window.FileReader = ControlledFileReader as unknown as typeof FileReader;
 
     readSpy = spyOn(
-      FileReader.prototype,
+      ControlledFileReader.prototype,
       'readAsDataURL',
-    ).and.callFake(function (this: FileReader) {
-      readers.push(this);
-      readerStates.set(this, FileReader.LOADING);
+    ).and.callFake(function (this: ControlledFileReader) {
+      const reader = this as unknown as FileReader;
+      readers.push(reader);
+      readerStates.set(reader, ControlledFileReader.LOADING);
     });
 
     abortSpy = spyOn(
-      FileReader.prototype,
+      ControlledFileReader.prototype,
       'abort',
-    ).and.callFake(function (this: FileReader) {
-      readerStates.set(this, FileReader.DONE);
+    ).and.callFake(function (this: ControlledFileReader) {
+      readerStates.set(this as unknown as FileReader, ControlledFileReader.DONE);
     });
 
     spyOnProperty(

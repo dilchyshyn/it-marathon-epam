@@ -20,10 +20,11 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('restaurant-frontend-app');
   });
 
-  it('should render title', () => {
+  it('should render the routed page and the decoration', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, restaurant-frontend-app');
+    expect(compiled.querySelector('router-outlet')).not.toBeNull();
+    expect(compiled.querySelector('app-halloween-decor')).not.toBeNull();
   });
 });
