@@ -76,7 +76,6 @@
 
 .btn-cancel {
   align-self: flex-start;
-  border: 1px solid color.$green-600;
   border-radius: 0.5rem;
   height: 2.5rem;
   font-weight: 600;
@@ -99,7 +98,7 @@
 
 ::ng-deep app-custom-button.btn-cancel > .custom-button {
   // height: 2.5rem;
-  background-color: color.$neutral-0;
+  background: color.$neutral-0;
   color: color.$green-600;
   border: 1px solid color.$green-600;
   align-self: flex-start;
@@ -111,8 +110,13 @@
   text-align: center;
   cursor: pointer;
 
+  // The primary button paints its gradient here; Cancel is the outlined one.
+  &::before {
+    display: none;
+  }
+
   &:disabled {
-    color: color.$neutral-0;
+    color: color.$neutral-400;
     cursor: not-allowed;
     border: 1px solid color.$neutral-200;
   }
