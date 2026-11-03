@@ -25,10 +25,13 @@ public sealed class RefreshTheGroupOrder : ITask
 {
     public async Task PerformAsAsync(Actor actor)
     {
-        var page = actor.LookingAtThePage();
-        await page.RunAndWaitForResponseAsync(
-            () => new GroupOrderPage(page).RefreshButton.ClickAsync(),
-            response => response.Url.EndsWith("/sessions", StringComparison.Ordinal) && response.Ok);
+        // The screen applies the sessions and the status together, so a refresh needs both answers.
+        var browser = actor.LookingAtThePage();
+        var sessions = browser.WaitForResponseAsync(r => r.Url.EndsWith("/sessions", StringComparison.Ordinal) && r.Ok);
+        var status = browser.WaitForResponseAsync(r => r.Url.EndsWith("/status", StringComparison.Ordinal) && r.Ok);
+
+        await new GroupOrderPage(browser).RefreshButton.ClickAsync();
+        await Task.WhenAll(sessions, status);
     }
 }
 

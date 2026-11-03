@@ -54,9 +54,8 @@ Feature: Group pre-order journeys
         | Bohdan | none      | 0     | still choosing |
       And the owner is warned that 2 carts have not been submitted
 
-    # Known defect (expected to fail until fixed): opening the screen creates the Owner's own session, and the next
-    # refresh counts it, so the warning names one person more than the guests who are still choosing.
-    @level1 @known-defect
+    # Opening the screen creates the Owner's own empty session; the next refresh must not count it.
+    @level1
     Scenario: The warning keeps counting only the guests after a refresh
       Given these guests have joined:
         | guest  | dish  | quantity | cart           |

@@ -151,21 +151,16 @@ public sealed class GroupOrderStepDefinitions(Actor actor) : StepDefinitionBase(
         await Assert.That(outcome.Status).IsEqualTo(status).Because($"response body was: {outcome.Body}");
     }
 
-    internal static async Task AssertGuests(GroupOrderView view, DataTable guests)
-    {
-        var expected = guests.Rows
-            .Select(r => new GuestLine(r["guest"], r["dishes"], decimal.Parse(r["total"], CultureInfo.InvariantCulture), r["cart"]))
-            .OrderBy(g => g.Guest, StringComparer.Ordinal)
-            .ToList();
-        var actual = view.Guests.OrderBy(g => g.Guest, StringComparer.Ordinal).ToList();
+    internal static async Task AssertGuests(GroupOrderView view, DataTable guests) =>
+        await Assert.That(Lines(view.Guests)).IsEqualTo(ExpectedLines(guests));
 
-        await Assert.That(Lines(actual)).IsEqualTo(Lines(expected));
-    }
+    internal static string ExpectedLines(DataTable guests) => Lines(guests.Rows.Select(r =>
+        new GuestLine(r["guest"], r["dishes"], decimal.Parse(r["total"], CultureInfo.InvariantCulture), r["cart"])));
 
     // "28.00" from the screen and "28" from the feature file are the same amount.
-    private static string Lines(IEnumerable<GuestLine> guests) => string.Join(
+    internal static string Lines(IEnumerable<GuestLine> guests) => string.Join(
         " | ",
-        guests.Select(g => $"{g.Guest}: {g.Dishes}, {g.Total.ToString("0.##", CultureInfo.InvariantCulture)}, {g.Cart}"));
+        guests.OrderBy(g => g.Guest, StringComparer.Ordinal).Select(g => $"{g.Guest}: {g.Dishes}, {g.Total.ToString("0.##", CultureInfo.InvariantCulture)}, {g.Cart}"));
 
     internal static async Task AssertTotal(GroupOrderView view, decimal total)
     {
@@ -180,6 +175,21 @@ public sealed class GroupOrderStepDefinitions(Actor actor) : StepDefinitionBase(
 public sealed class GroupOrderScreenStepDefinitions(Actor actor) : StepDefinitionBase(actor)
 {
     private GroupOrderPage Screen => new(Actor.LookingAtThePage());
+
+    /// <summary>Reads the screen again for a moment, as a retrying assertion does: an answer that has arrived may not
+    /// be drawn yet. Well under the screen's 15 second auto-refresh, so a dead Refresh button still fails.</summary>
+    private async Task<GroupOrderView> TheScreenSettlingOn(Func<GroupOrderView, bool> expected)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        var view = await Actor.AsksForAsync(new TheGroupOrderShown());
+        while (!expected(view) && DateTime.UtcNow < deadline)
+        {
+            await Actor.LookingAtThePage().WaitForTimeoutAsync(200);
+            view = await Actor.AsksForAsync(new TheGroupOrderShown());
+        }
+
+        return view;
+    }
 
     [When("the owner opens the group order")]
     public Task WhenTheOwnerOpens() => Actor.AttemptsToAsync(new OpenTheGroupOrderFromMyReservations());
@@ -197,15 +207,19 @@ public sealed class GroupOrderScreenStepDefinitions(Actor actor) : StepDefinitio
     public Task WhenTheWaiterOpens() => Actor.AttemptsToAsync(new OpenTheOwnersPreOrderAsTheWaiter());
 
     [Then("the group shows these guests:")]
-    public async Task ThenTheScreenShows(DataTable guests) =>
-        await GroupOrderStepDefinitions.AssertGuests(await Actor.AsksForAsync(new TheGroupOrderShown()), guests);
+    public async Task ThenTheScreenShows(DataTable guests)
+    {
+        var expected = GroupOrderStepDefinitions.ExpectedLines(guests);
+        var view = await TheScreenSettlingOn(v => GroupOrderStepDefinitions.Lines(v.Guests) == expected);
+        await GroupOrderStepDefinitions.AssertGuests(view, guests);
+    }
 
     [Then("the group total is {decimal}")]
     public async Task ThenTheScreenTotalIs(decimal total)
     {
         // The screen's Grand Total is the consolidated order, so only submitted carts count (FE spec), unlike the
         // service's total, which covers every participant.
-        var view = await Actor.AsksForAsync(new TheGroupOrderShown());
+        var view = await TheScreenSettlingOn(v => v.Total == total);
         await Assert.That(view.Total).IsEqualTo(total);
         await Assert.That(view.Guests.Where(g => g.Cart == "submitted").Sum(g => g.Total)).IsEqualTo(total);
     }
