@@ -2,6 +2,7 @@
 
 **Напрям:** 1, груповий pre-order. Тестується власний розгорнутий застосунок (Backend + Frontend).
 **Підхід:** BDD + Screenplay (Reqnroll, TUnit, Playwright for .NET), як у наявному фреймворку.
+**Застосунок, що тестується:** https://ds0ecpm5p0oa8.cloudfront.net
 
 | Шар | Де лежить |
 |---|---|
