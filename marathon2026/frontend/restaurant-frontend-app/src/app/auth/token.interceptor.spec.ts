@@ -12,10 +12,11 @@ describe('tokenInterceptor', () => {
   let http: HttpClient;
   let httpMock: HttpTestingController;
   let toastService: jasmine.SpyObj<ToastService>;
+  let authService: jasmine.SpyObj<AuthenticationService>;
 
   beforeEach(() => {
     toastService = jasmine.createSpyObj<ToastService>('ToastService', ['error']);
-    const authService = jasmine.createSpyObj<AuthenticationService>('AuthenticationService', [
+    authService = jasmine.createSpyObj<AuthenticationService>('AuthenticationService', [
       'getTokens',
     ]);
     authService.getTokens.and.returnValue(null);
@@ -59,5 +60,52 @@ describe('tokenInterceptor', () => {
 
     expect(toastService.error).not.toHaveBeenCalled();
     expect(receivedStatus).toBe(400);
+  });
+
+  describe('the Owner token on /guest/ addresses', () => {
+    const GROUP = 'https://test.api/guest/groups/group-1';
+
+    beforeEach(() => {
+      authService.getTokens.and.returnValue({ idToken: 'owner-token' } as ReturnType<
+        AuthenticationService['getTokens']
+      >);
+    });
+
+    it('is sent when the Owner reads the group sessions', () => {
+      http.get(`${GROUP}/sessions`).subscribe();
+
+      const request = httpMock.expectOne(`${GROUP}/sessions`);
+
+      expect(request.request.headers.get('Authorization')).toBe('Bearer owner-token');
+      request.flush({});
+    });
+
+    it('is sent when the Owner removes a guest session', () => {
+      http.delete(`${GROUP}/sessions/session-1`).subscribe();
+
+      const request = httpMock.expectOne(`${GROUP}/sessions/session-1`);
+
+      expect(request.request.headers.get('Authorization')).toBe('Bearer owner-token');
+      request.flush({});
+    });
+
+    it('is not sent on the public group status', () => {
+      http.get(`${GROUP}/status`).subscribe();
+
+      const request = httpMock.expectOne(`${GROUP}/status`);
+
+      expect(request.request.headers.has('Authorization')).toBeFalse();
+      request.flush({});
+    });
+
+    it('does not replace the token of a guest session', () => {
+      const url = 'https://test.api/guest/sessions/session-1/submit';
+      http.post(url, {}, { headers: { Authorization: 'Bearer guest-token' } }).subscribe();
+
+      const request = httpMock.expectOne(url);
+
+      expect(request.request.headers.get('Authorization')).toBe('Bearer guest-token');
+      request.flush({});
+    });
   });
 });

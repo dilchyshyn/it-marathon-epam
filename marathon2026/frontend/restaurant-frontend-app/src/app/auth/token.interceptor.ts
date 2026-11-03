@@ -11,6 +11,8 @@ import { AuthenticationService } from './services/authentication.service';
 import { SKIP_ERROR_TOAST } from './skip-error-toast.context';
 import { getServerErrorMessage } from '../shared/helpers/http-error-helpers';
 
+const OWNER_GROUP_SESSIONS = /\/guest\/groups\/[^/]+\/sessions(\/|\?|$)/;
+
 export const tokenInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
@@ -20,7 +22,8 @@ export const tokenInterceptor: HttpInterceptorFn = (
   // IMPORTANT: do not modify Guest endpoints at all.
   // Guest flow uses a different token (guest session token) and we must not touch the body.
   // Otherwise we break POST /guest/sessions payload.
-  if (req.url.includes('/guest/')) {
+  // The Owner's group sessions live under /guest/ too, but they need the Owner's token.
+  if (req.url.includes('/guest/') && !OWNER_GROUP_SESSIONS.test(req.url)) {
     return next(req).pipe(
       catchError((error: HttpErrorResponse) => {
         console.log(error);
