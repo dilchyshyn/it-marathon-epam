@@ -1,3 +1,64 @@
+# Рішення ДЗ Test Automation
+
+**Напрям:** 1, груповий pre-order. Тестується власний розгорнутий застосунок (Backend + Frontend).
+**Підхід:** BDD + Screenplay (Reqnroll, TUnit, Playwright for .NET), як у наявному фреймворку.
+
+| Шар | Де лежить |
+|---|---|
+| UI: основні сценарії в браузері | [`Features/GroupPreOrderScreen.feature`](Features/GroupPreOrderScreen.feature) |
+| API: авторизація та валідація | [`Features/GroupPreOrderApi.feature`](Features/GroupPreOrderApi.feature) |
+| Кроки, задачі, питання, page objects, API-клієнт | `StepDefinitions/GroupOrder*`, `Screenplay/**/GroupOrder*`, `Ui/GroupOrderPage.cs`, `Api/GroupOrdersApi.cs` |
+
+## Налаштування
+
+```bash
+cp .env.example .env   # UI_URL, API_URL, WAITER_USERNAME, WAITER_PASSWORD
+dotnet build
+```
+
+`WAITER_*` це наявний офіціант середовища: він потрібен для прибирання тестових даних. У CI ті самі значення задаються змінними `AQA_UI_URL`, `AQA_API_URL` і секретами `AQA_WAITER_USERNAME`, `AQA_WAITER_PASSWORD`.
+
+## Запуск
+
+```bash
+dotnet run --no-build -- --treenode-filter "/*/*/*/*[Category=group-preorder]"                      # усі сценарії групового pre-order
+dotnet run --no-build -- --treenode-filter "/*/*/*/*[(Category=group-preorder)&(Category=level2)]"  # один рівень: level1, level2, level3
+dotnet run --no-build -- --treenode-filter "/*/*/*/*[(Category=group-preorder)&(Category=ui)]"      # лише UI або лише api
+```
+
+## Звіти
+
+- **Локально:** `TestResults/` містить звіт TUnit і TRX, `TestResults/reqnroll/` містить звіт Reqnroll, а `TestResults/traces/` містить Playwright trace впалих UI-сценаріїв (`npx playwright show-trace <файл>.zip`).
+- **У CI:** [`.github/workflows/aqa-tests.yml`](../../../.github/workflows/aqa-tests.yml) запускається при зміні тестів і вручну (Actions → AQA Tests). Підсумок є на сторінці запуску, а звіти й trace лежать в артефактах. Впалий тест не зупиняє пайплайн: артефакти публікуються завжди, а сам запуск у кінці стає червоним.
+
+## Тестові дані
+
+Кожен сценарій створює власні локацію, офіціанта, столик і меню та прибирає їх після себе. Дати генеруються динамічно. API видалення користувачів і груп немає, тому вони лишаються з унікальними email і ідентифікаторами, а бронювання скасовуються.
+
+## Обрана поведінка для випадків, не визначених у ДЗ
+
+| Випадок | Очікувана поведінка |
+|---|---|
+| Група без учасників | `participants: []`, `total: 0`; на екрані повідомлення, кнопка підтвердження неактивна |
+| Не Owner: інший клієнт або офіціант | Відмова `403` |
+| Гість із токеном гостьової сесії або неавторизований користувач | Відмова `401` |
+| Повторний submit | `400` із `errorCode: GroupReservationSubmitted` |
+| Видалення останнього гостя | Успіх: у списку немає гостей, `total: 0` |
+| Owner не має власного замовлення | `400` (за специфікацією «order не знайдено»), на екрані повідомлення про помилку |
+| Підтверджений кошик без страв | Не виникає: порожній кошик не можна підтвердити (`400`, «The cart is empty»), тож перевіряється ця відмова |
+| Сума на екрані й сума в API | API рахує всіх учасників. Grand Total на екрані рахує лише підтверджені кошики, як вимагає ДЗ Frontend |
+
+## Знайдені дефекти
+
+| Дефект | Статус |
+|---|---|
+| Екран Owner не надсилав токен до `/guest/groups/{id}/sessions` і не працював наживо | Виправлено, знайдено цими тестами |
+| Після оновлення екрана попередження рахує й Owner: «3 participants» замість 2 гостей | Відкритий: сценарій лишається червоним із `@known-defect` |
+| Додавання страв в одну локацію одночасно може втратити страву: локація зберігається цілком за схемою «прочитати, змінити, записати» | Відкритий: тести обходять його окремою локацією на сценарій |
+| `POST /waiters`, `/locations`, `/dishes`, `/tables` доступні без авторизації | Відкритий: так налаштовано в оригінальному застосунку |
+
+---
+
 # Restaurant AQA framework
 
 End-to-end tests for the Green & Tasty restaurant application: Reqnroll (Gherkin) + TUnit + Playwright for .NET, with the Screenplay pattern.
