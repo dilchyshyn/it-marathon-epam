@@ -16,7 +16,10 @@
   min-height: 58vh;
 
   @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0;
     min-height: auto;
+    padding-bottom: 1rem;
   }
 }
 
@@ -56,8 +59,13 @@
   padding: 1.5rem;
   background: linear-gradient(180deg, color.$neutral-0 0%,color.$bg-yellow 100%);
 
+  // On a phone the card sits under the photo instead of hanging off the screen's left edge.
   @media (max-width: 768px) {
-    width: 100%;
+    position: relative;
+    top: auto;
+    right: auto;
+    width: auto;
+    margin: -2rem 1rem 0;
   }
 }
 
