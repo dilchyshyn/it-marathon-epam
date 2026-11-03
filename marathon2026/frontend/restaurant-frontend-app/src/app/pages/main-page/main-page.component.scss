@@ -19,7 +19,29 @@
   margin: 0;
   height: auto;
   max-height: 24.75rem;
-  background-color: color.$sage-100;
+  background: color.$halloween-night-gradient;
+
+  // The same moon as on the group pre-order screen.
+  &::after {
+    content: '';
+    position: absolute;
+    top: 1.5rem;
+    left: 38%;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff6d8, #f3d27a 70%);
+    box-shadow: 0 0 40px rgba(243, 210, 122, 0.45);
+    pointer-events: none;
+
+    @media (max-width: 768px) {
+      top: 0.75rem;
+      left: auto;
+      right: 0.75rem;
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
 
   .hero-image {
     flex: 1 1 auto;
@@ -53,14 +75,14 @@
       font-weight: 500;
       font-size: 3rem;
       line-height: 3.25rem;
-      color: color.$neutral-900;
+      color: color.$neutral-0;
       margin: 0;
     }
 
     .hero-tagline {
       text-transform: uppercase;
       font-size: 0.875rem;
-      color: color.$green-800;
+      color: color.$halloween-pumpkin-100;
       margin: 0;
     }
   }
@@ -90,7 +112,7 @@
       max-width: 100%;
       order: 0;
       z-index: 1;
-      background-color: color.$sage-100;
+      background: color.$halloween-night-gradient;
       padding: 2rem 1.5rem 0.5rem 1.5rem;
     }
 

@@ -6,7 +6,11 @@
   align-items: center;
   min-height: 92px;
   padding: 0 40px;
-  background: color.$bg-green;
+  background: color.$halloween-night-gradient;
+
+  h3 {
+    color: color.$neutral-0;
+  }
 
 }
 

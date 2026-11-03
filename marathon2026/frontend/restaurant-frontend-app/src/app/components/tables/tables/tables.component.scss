@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   min-height: max(832px, calc(100dvh - 68px));
-  background: color.$bg-green;
+  background: color.$halloween-night-gradient;
 
   @media (min-width: 1024px) {
     flex-direction: row;
@@ -133,7 +133,7 @@
   padding: 12px;
   border: 1px solid color.$green-150;
   border-radius: 8px;
-  background: rgba(color.$green-100, 0.6);
+  background: color.$green-100;
   color: color.$neutral-900;
   font-size: 14px;
   line-height: 24px;

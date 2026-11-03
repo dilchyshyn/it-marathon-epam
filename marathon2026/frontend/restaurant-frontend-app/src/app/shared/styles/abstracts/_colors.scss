@@ -6,26 +6,27 @@ $neutral-600: #575757;
 $neutral-700: #454444;
 $neutral-900: #232323;
 
-//new green
-$green-100: #e9ffea;
-$green-150: #C5E8C7;
-$green-300: #48AF6F;
-$green-400: #15A84C;
-$green-600: #0F7A37;
-$green-800: #0B5B29;
+// Halloween theme: the "green" tokens keep their names so components stay untouched, but they hold the pumpkin palette.
+$green-100: #ffe8d1;
+$green-150: #ffd4a8;
+$green-300: #f7964a;
+$green-400: #d9640c;
+$green-600: #b84f08;
+$green-800: #8a3b06;
 $green-gradient:  linear-gradient(
     120deg,
-    #0B5B29,
-    #0F7A37 80%
+    #b84f08,
+    #d9640c 80%
 );
 
 //Background colors
-$bg-green: #D9E5D9;
-$bg-yellow: #F7F7EC;
+$bg-green: #efe7f8;
+$bg-yellow: #fff6ec;
 
-$blue-100: #dee9ff;
-$blue-400: #0e53e9;
-$blue-500:#0C48CA;
+// Halloween theme: links and info accents are purple.
+$blue-100: #f1e8fb;
+$blue-400: #6b3fa0;
+$blue-500:#4d2a78;
 
 $orange-30:#FFFDEC;
 $orange-100: #fff2d4;
@@ -56,9 +57,9 @@ $new-violet-400:#7E4E9A;
 
 //used in code not defined in ui
 $color-gray-light: #b4b4b4;
-$color-success: #00ad0c;
+$color-success: #b84f08;
 $shadow: #c2c2c280;
-$sage-100: #D6E5D5;
+$sage-100: #e6dbf3;
 
 
 
