@@ -90,6 +90,26 @@ describe('Рівень 2 · сторінка Owner Review', () => {
       expect(create().element.textContent).toContain('Caesar Salad × 3');
     });
 
+    it('жовта плашка: порожня сесія Owner не рахується', () => {
+      const sessions = structuredClone(SESSIONS);
+      sessions.participants[0] = { ...sessions.participants[0], isSubmitted: false, items: [], total: 0 };
+      service.getSessions$.and.returnValue(of(sessions));
+
+      const { element } = create();
+
+      expect(element.querySelector('.notice')?.textContent).toContain('1 participant hasn’t submitted');
+    });
+
+    it('жовта плашка: Owner зі стравами в непідтвердженому кошику рахується', () => {
+      const sessions = structuredClone(SESSIONS);
+      sessions.participants[0].isSubmitted = false;
+      service.getSessions$.and.returnValue(of(sessions));
+
+      const { element } = create();
+
+      expect(element.querySelector('.notice')?.textContent).toContain('2 participants haven’t submitted');
+    });
+
     it('жовта плашка: «1 participant hasn’t submitted…»', () => {
       expect(create().element.textContent).toMatch(/1 participant hasn.t submitted/);
     });

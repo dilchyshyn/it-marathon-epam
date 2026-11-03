@@ -62,7 +62,13 @@ export class GroupOrderPageComponent {
   readonly statusLabel = computed(() => STATUS_LABELS[this.groupStatus()]);
   readonly isOpen = computed(() => this.groupStatus() === 'Open');
   readonly hasAnyDishes = computed(() => this.participants().some((person) => person.items.length > 0));
-  readonly pendingCount = computed(() => this.participants().filter((person) => !person.isSubmitted).length);
+  // The Owner's own session exists from the moment the screen opens; while it is empty nobody is waiting on it.
+  readonly pendingCount = computed(
+    () =>
+      this.participants().filter(
+        (person) => !person.isSubmitted && (person.type !== 'Owner' || person.items.length > 0),
+      ).length,
+  );
   readonly pendingMessage = computed(() => {
     const count = this.pendingCount();
     return count === 1
