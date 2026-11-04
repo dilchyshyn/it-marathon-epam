@@ -138,8 +138,8 @@ export class GuestPreOrderPageComponent {
             vitamins: dish.vitamins ?? '',
         };
     }
-
-    noop(): void {
-        // Guest name modal is mandatory; ignore close attempts (Esc/X)
+    /** Without a name a guest cannot join, so closing the invitation leaves the page; the link still works later. */
+    leaveInvitation(): void {
+        void this.router.navigate(['/main']);
     }
 }

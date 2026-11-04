@@ -91,7 +91,7 @@
 
 <!-- mandatory modal: show until name is set -->
 @if (!store.guestName()) {
-<app-guest-name-modal [invite]="store.inviteVm()" (confirmed)="store.join($event)" (closed)="noop()" />
+<app-guest-name-modal [invite]="store.inviteVm()" (confirmed)="store.join($event)" (closed)="leaveInvitation()" />
 }
 
 <!-- cart drawer -->
