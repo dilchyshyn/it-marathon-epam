@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { CustomNumberComponent } from '@app/shared/custom-components/custom-number/custom-number.component';
 import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -112,6 +114,57 @@ describe('ReservationsPageComponent', () => {
     expect(searchSpy).toHaveBeenCalledWith(
       jasmine.objectContaining({ location: null, guests: 1 })
     );
+  });
+
+  describe('outdated search notice', () => {
+    const notice = () => (fixture.nativeElement as HTMLElement).querySelector('.search-outdated');
+
+    function searchOnce(): void {
+      if (!jasmine.isSpy(TestBed.inject(TableService).getAvailableTablesWithTimeSlots$)) {
+        spyOn(TestBed.inject(TableService), 'getAvailableTablesWithTimeSlots$').and.returnValue(of([]));
+      }
+      component.onDateSelected(component.dateOptions[0]);
+      component.onTimeSelected('10:00');
+      component.onFilter();
+      fixture.detectChanges();
+    }
+
+    it('is not shown before the first search or right after a search', () => {
+      fixture.detectChanges();
+      expect(notice()).toBeNull();
+
+      searchOnce();
+      expect(notice()).toBeNull();
+    });
+
+    it('appears when the guests change and goes away after searching again', () => {
+      searchOnce();
+
+      component.onGuestsFilterChange(6);
+      fixture.detectChanges();
+      expect(notice()?.textContent).toContain('Find a Table');
+
+      component.onFilter();
+      fixture.detectChanges();
+      expect(notice()).toBeNull();
+    });
+
+    it('appears when the location, date or time change', () => {
+      searchOnce();
+      component.onTimeSelected('11:30');
+      expect(component.isSearchOutdated).toBeTrue();
+
+      component.onTimeSelected('10:00');
+      expect(component.isSearchOutdated).toBeFalse();
+
+      component.onLocationSelected('48 Rustaveli Ave');
+      expect(component.isSearchOutdated).toBeTrue();
+    });
+  });
+
+  it('lets up to 10 guests be chosen', () => {
+    const counter = fixture.debugElement.query(By.directive(CustomNumberComponent));
+    expect(counter.componentInstance.maxValue()).toBe(10);
   });
 
   describe('location select', () => {

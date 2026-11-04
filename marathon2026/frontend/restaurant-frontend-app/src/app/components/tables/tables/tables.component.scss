@@ -173,6 +173,17 @@
   }
 }
 
+.search-outdated {
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid color.$orange-400;
+  border-radius: 8px;
+  background: color.$orange-100;
+  color: color.$neutral-900;
+  font-size: 14px;
+  line-height: 24px;
+}
+
 .results-summary {
   display: flex;
   flex-direction: column;
