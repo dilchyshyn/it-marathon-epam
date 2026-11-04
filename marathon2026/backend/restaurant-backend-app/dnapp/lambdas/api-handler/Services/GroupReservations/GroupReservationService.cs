@@ -18,7 +18,6 @@ public class GroupReservationService(
     IGroupReservationRepository groupReservationRepository,
     ITableRepository tableRepository,
     IReservationRepository reservationRepository,
-    IGuestSessionRepository guestSessionRepository,
     IUserService userService,
     ILocationService locationService) : IGroupReservationService
 {
@@ -32,15 +31,9 @@ public class GroupReservationService(
         if (groupReservation.Status != GroupReservationStatus.Open)
             throw new GroupReservationExpiredException();
 
-        Task<Reservation?> reservationTask = reservationRepository.GetReservationByIdAsync(groupReservation.ReservationId);
-        Task<int> countTask = guestSessionRepository.CountByGroupReservationId(groupReservation.GroupReservationId);
-
-        Reservation reservation = await reservationTask ?? throw new ValidationException("Associated reservation not found.");
-        int joinedGuestsCount = await countTask;
-
-        if (joinedGuestsCount + 1 >= reservation.GuestCount)
-            throw new GuestLimitExceededException();
-
+        // A full group still opens: a guest who already joined comes back through the same link to their cart.
+        // The limit is enforced when a new guest joins (GuestSessionService.CreateGuestSessionAsync).
+        Reservation reservation = await reservationRepository.GetReservationByIdAsync(groupReservation.ReservationId) ?? throw new ValidationException("Associated reservation not found.");
         Table table = await tableRepository.GetTableAsync(reservation.TableId)
             ?? throw new InvalidOperationException("Associated table not found.");
 

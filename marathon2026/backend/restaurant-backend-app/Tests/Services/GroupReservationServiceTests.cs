@@ -31,7 +31,6 @@ public class GroupReservationServiceTests
             _groupReservationRepositoryMock.Object,
             _tableRepositoryMock.Object,
             _reservationRepositoryMock.Object,
-            _guestSessionRepositoryMock.Object,
             _userServiceMock.Object,
             _locationServiceMock.Object);
     }
@@ -116,10 +115,17 @@ public class GroupReservationServiceTests
 
     [Theory]
     [AutoData]
-    public async Task GetGroupReservationByTokenAsync_WhenGuestCountIsMax_ThrowsGuestLimitExceeded(GroupReservation groupReservation, Reservation reservation)
+    public async Task GetGroupReservationByTokenAsync_WhenGroupIsFull_StillReturnsTheInvitation(
+        GroupReservation groupReservation,
+        Table table,
+        Reservation reservation,
+        Location location)
     {
+        // A guest who already joined comes back through the same link; only a new join is limited.
         groupReservation.Status = GroupReservationStatus.Open;
         groupReservation.ReservationId = reservation.Id;
+        reservation.TableId = table.Id;
+        table.LocationId = location.Id;
 
         _groupReservationRepositoryMock
             .Setup(r => r.GetGroupReservationByTokenAsync(groupReservation.ReservationToken))
@@ -133,7 +139,17 @@ public class GroupReservationServiceTests
             .Setup(r => r.CountByGroupReservationId(groupReservation.GroupReservationId))
             .ReturnsAsync(reservation.GuestCount);
 
-        await Assert.ThrowsAsync<GuestLimitExceededException>(() => _service.GetGroupReservationByTokenAsync(groupReservation.ReservationToken));
+        _tableRepositoryMock
+            .Setup(r => r.GetTableAsync(table.Id))
+            .ReturnsAsync(table);
+
+        _locationServiceMock
+            .Setup(s => s.GetLocationByIdAsync(table.LocationId))
+            .ReturnsAsync(location);
+
+        var result = await _service.GetGroupReservationByTokenAsync(groupReservation.ReservationToken);
+
+        Assert.Equal(groupReservation.GroupReservationId, result.GroupReservationId);
     }
 
     [Theory]
