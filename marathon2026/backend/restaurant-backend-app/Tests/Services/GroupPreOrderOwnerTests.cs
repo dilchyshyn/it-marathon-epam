@@ -290,6 +290,23 @@ public class GroupPreOrderOwnerTests
     }
 
     [Fact]
+    public async Task DeleteGuestSessionAsync_IndexStillListsTheRemovedGuest_LeavesThemOutOfTheSnapshot()
+    {
+        var andrii = Session("session1", "Andrii", submitted: true, ("dish1", 2));
+        var olena = Session("session2", "Olena", submitted: false, ("dish2", 1));
+        _guestSessionRepository.Setup(r => r.GetByGuestSessionId("session1")).ReturnsAsync(andrii);
+
+        // The sessions are read through a secondary index, which can lag behind the delete for a moment.
+        SetupSessions(andrii, olena);
+
+        GetAllSessionsResponse result = await _service.DeleteGuestSessionAsync(OwnerId, GroupId, "session1");
+
+        var participant = Assert.Single(result.Participants);
+        Assert.Equal("session2", participant.Id);
+        Assert.Equal(220, result.Total);
+    }
+
+    [Fact]
     public async Task DeleteGuestSessionAsync_OwnerSession_ThrowsBadRequest()
     {
         _guestSessionRepository.Setup(r => r.GetByGuestSessionId("owner-session")).ReturnsAsync(OwnerSession());

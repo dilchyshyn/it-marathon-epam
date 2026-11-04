@@ -194,7 +194,8 @@ public class GuestSessionService(
 
         await guestSessionRepository.DeleteAsync(session);
 
-        return await BuildGroupSnapshotAsync(groupReservationId);
+        // The snapshot reads a secondary index, which can still list the session for a moment after the delete.
+        return await BuildGroupSnapshotAsync(groupReservationId, excludedSessionId: guestSessionId);
     }
 
     public async Task<GetAllSessionsResponse> GetGroupSessionsAsync(string userId, string groupReservationId)
@@ -299,9 +300,11 @@ public class GuestSessionService(
         return consolidatedDishes.Select(d => new SubmittedDishResponse(d.DishId, d.Quantity)).ToArray();
     }
 
-    private async Task<GetAllSessionsResponse> BuildGroupSnapshotAsync(string groupReservationId)
+    private async Task<GetAllSessionsResponse> BuildGroupSnapshotAsync(string groupReservationId, string? excludedSessionId = null)
     {
-        var sessions = await guestSessionRepository.GetAllByGroupReservationIdAsync(groupReservationId);
+        var sessions = (await guestSessionRepository.GetAllByGroupReservationIdAsync(groupReservationId))
+            .Where(s => s.Id != excludedSessionId)
+            .ToList();
 
         var dishIds = sessions
             .SelectMany(s => s.Dishes ?? [])
