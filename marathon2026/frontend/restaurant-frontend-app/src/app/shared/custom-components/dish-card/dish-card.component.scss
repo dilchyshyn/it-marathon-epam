@@ -17,6 +17,16 @@
   position: relative;
   box-sizing: border-box;
 
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+      z-index: 1;
+      transform: scale(1.04);
+      box-shadow: 0 0.5rem 1.5rem color.$shadow;
+    }
+  }
+
   .dish-image {
     width: 62%;
     aspect-ratio: 1 / 1;

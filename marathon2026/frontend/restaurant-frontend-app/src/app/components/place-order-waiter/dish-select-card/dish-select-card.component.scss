@@ -98,3 +98,15 @@
     min-width: 10px;
   }
 }
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .dish-card {
+    position: relative;
+    transition: transform 0.25s ease;
+
+    &:hover {
+      z-index: 1;
+      transform: scale(1.03);
+    }
+  }
+}
