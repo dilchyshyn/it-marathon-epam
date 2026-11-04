@@ -1,4 +1,5 @@
-import { ApplicationConfig, isDevMode, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
+import { AuthenticationService } from './auth/services/authentication.service';
+import { ApplicationConfig, inject, isDevMode, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -16,6 +17,7 @@ export const appConfig: ApplicationConfig = {
     // DEV-ONLY: ?demo у будь-якій адресі — мок-логін як Owner демо-бронювання (домашка, рівні 1–2).
     provideAppInitializer(() => {
       if (isDevMode()) applyDemoLoginFromUrl();
+      inject(AuthenticationService).restoreSession();
     }),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),

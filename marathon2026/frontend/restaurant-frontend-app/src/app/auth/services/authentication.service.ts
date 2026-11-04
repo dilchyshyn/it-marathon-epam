@@ -17,7 +17,22 @@ export class AuthenticationService {
   public isAuthorised$: Observable<boolean> = this.isAuthorised$$.asObservable();
   public jwtHelperService = new JwtHelperService();
   private readonly http = inject(HttpClient);
-  
+
+  /**
+   * A stored token must not outlive its user: the header shows neither Sign In nor the account in that state.
+   * Runs from an app initializer, not the constructor: the request goes through tokenInterceptor, which injects
+   * this service and so cannot run while it is still being constructed.
+   */
+  restoreSession(): void {
+    try {
+      if (this.getTokens() && !this.getUser()) {
+        this.loadUser();
+      }
+    } catch {
+      this.signOut();
+    }
+  }
+
   async signIn(email: string, password: string): Promise<LoginResult> {
     const body = {
       email: email,
@@ -142,7 +157,9 @@ export class AuthenticationService {
       },
       (error) => {
         console.error('Failed to load user data:', error);
-        this.user$$.next(null);
+        if (!this.getUser()) {
+          this.signOut();
+        }
       }
     );
   }
