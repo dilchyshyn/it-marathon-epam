@@ -33,7 +33,7 @@ export class GuestPreorderStore {
 
     readonly invite = signal<GuestInvite | null>(null);
     readonly inviteLoading = signal(false);
-    readonly inviteError = signal<'expired' | 'retryable' | null>(null);
+    readonly inviteError = signal<'expired' | 'retryable' | 'full' | null>(null);
 
     readonly guestName = signal<string>('');
     readonly status = signal<GuestPreorderStatus>('active');
@@ -119,7 +119,11 @@ export class GuestPreorderStore {
         } catch (error) {
             this.invite.set(null);
             const status = error instanceof HttpErrorResponse ? error.status : null;
-            this.inviteError.set(status === 404 || status === 410 ? 'expired' : 'retryable');
+            if (this.isGroupFull(error)) {
+                this.inviteError.set('full');
+            } else {
+                this.inviteError.set(status === 404 || status === 410 ? 'expired' : 'retryable');
+            }
         } finally {
             this.inviteLoading.set(false);
         }
@@ -157,7 +161,13 @@ export class GuestPreorderStore {
             await this.loadMenu();
         } catch (e) {
             console.log('[join error]', e);
-            this.joinError.set('Failed to join session');
+            if (this.isGroupFull(e)) {
+                // The name stays unsaved: this guest did not join, and a place may free up later.
+                this.guestName.set('');
+                this.inviteError.set('full');
+            } else {
+                this.joinError.set('Failed to join session');
+            }
         } finally {
             this.joinLoading.set(false);
         }
@@ -320,8 +330,12 @@ export class GuestPreorderStore {
             this.guestSessionId.set(session.SessionId);
             this.guestSessionToken.set(session.SessionToken);
             await this.loadMenu();
-        } catch {
-            this.menuError.set('Could not start a new pre-order. Please try again.');
+        } catch (error) {
+            if (this.isGroupFull(error)) {
+                this.inviteError.set('full');
+            } else {
+                this.menuError.set('Could not start a new pre-order. Please try again.');
+            }
         } finally {
             this.menuLoading.set(false);
             this.joinLoading.set(false);
@@ -357,6 +371,10 @@ export class GuestPreorderStore {
         } finally {
             this.cartBusy.set(false);
         }
+    }
+
+    private isGroupFull(error: unknown): boolean {
+        return error instanceof HttpErrorResponse && error.error?.errorCode === 'GuestLimitExceeded';
     }
 
     private clearStorage(ctx: string) {

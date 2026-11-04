@@ -255,6 +255,14 @@
         color: color.$neutral-700;
     }
 
+    .invite-home-link {
+        padding: 0.7rem 1.5rem;
+        border-radius: 0.5rem;
+        background: color.$green-600;
+        color: color.$neutral-0;
+        text-decoration: none;
+    }
+
     button {
         padding: 0.7rem 1.5rem;
         border: 0;
