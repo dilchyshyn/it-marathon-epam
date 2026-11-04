@@ -34,6 +34,24 @@ describe('TableCardComponent', () => {
     component = fixture.componentInstance;
   });
 
+  describe('photo', () => {
+    const photo = (): HTMLElement => fixture.nativeElement.querySelector('.image-wrapper');
+
+    it('shows the photo of the location', () => {
+      fixture.componentRef.setInput('imageUrl', 'https://test.images/baratashvili.jpg');
+      render(buildTable([11]));
+
+      expect(photo().style.backgroundImage).toContain('https://test.images/baratashvili.jpg');
+    });
+
+    it('keeps the default image when the location has no photo', () => {
+      render(buildTable([11]));
+
+      expect(photo().style.backgroundImage).toBe('');
+      expect(getComputedStyle(photo()).backgroundImage).toContain('table-card-image.jpg');
+    });
+  });
+
   it('renders a fixed grid of half-hour slots from 10:00 to 21:30', () => {
     render(buildTable([11]));
 

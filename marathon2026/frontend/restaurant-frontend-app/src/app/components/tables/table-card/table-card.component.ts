@@ -28,8 +28,15 @@ export class TableCardComponent {
   readonly location = input.required<string>();
   readonly date = input.required<string>();
   readonly table = input.required<Table>();
+  /** Photo of the table's location; without one the card keeps the default image from its stylesheet. */
+  readonly imageUrl = input<string | null | undefined>(null);
   // @Output() showAllClicked = new EventEmitter<Table>();
   @Output() timeSlotSelected = new EventEmitter<TimeRange>();
+
+  protected readonly backgroundImage = computed(() => {
+    const imageUrl = this.imageUrl();
+    return imageUrl ? `url("${encodeURI(imageUrl)}")` : null;
+  });
 
   protected readonly hourSlots = computed<HourSlot[]>(() => this.buildHourSlots());
 

@@ -143,6 +143,10 @@ export class TablesComponent implements OnInit {
     );
   }
 
+  getLocationImage(table: Table): string | undefined {
+    return this.locations.find((location) => location.id === table.locationId)?.imageUrl;
+  }
+
   /** True when the form no longer matches what the results on screen were searched for. */
   get isSearchOutdated(): boolean {
     const applied = this.lastAppliedFilter;
